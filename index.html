@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Enterprise SSO Demo • Access Control • Secure</title>
+  <meta name="description" content="Enterprise-style SSO simulation: Credentials → MFA (TOTP) → Signed JWT → Redirect." />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Ctext y='56' x='4' font-size='56'%3E%F0%9F%94%90%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <main id="main" class="container" role="main">
+    <header class="brand" role="banner">
+      <div class="logo" aria-hidden="true">🔐</div>
+      <div class="titles">
+        <h1>Access Control • Secure</h1>
+        <p class="subtitle">Enterprise SSO Flow Demo (Mock)</p>
+      </div>
+    </header>
+
+    <section id="stepper" class="stepper" aria-label="SSO flow progress">
+      <div class="step active" data-step="1"><span aria-hidden="true">1</span><p>Credentials</p></div>
+      <div class="rail" aria-hidden="true"></div>
+      <div class="step" data-step="2"><span aria-hidden="true">2</span><p>MFA (TOTP)</p></div>
+      <div class="rail" aria-hidden="true"></div>
+      <div class="step" data-step="3"><span aria-hidden="true">3</span><p>JWT Issued</p></div>
+      <div class="rail" aria-hidden="true"></div>
+      <div class="step" data-step="4"><span aria-hidden="true">4</span><p>Redirect</p></div>
+    </section>
+
+    <!-- Step 1: Credentials -->
+    <section id="step-1" class="card active" aria-labelledby="h-step1">
+      <h2 id="h-step1">Step 1 — Sign In</h2>
+      <p class="hint">Enter any email and a password with 8+ characters to continue.</p>
+      <form id="form-credentials" novalidate>
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="you@example.com" aria-describedby="email-help" required />
+          <small id="email-help" class="help">Use a realistic format: name@domain.com</small>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="••••••••" minlength="8" required />
+        </div>
+        <div class="actions">
+          <button type="submit" class="btn primary">Continue</button>
+        </div>
+      </form>
+      <p class="footnote">This is a <strong>mock</strong> UI for education. No data leaves your browser.</p>
+    </section>
+
+    <!-- Step 2: MFA (TOTP) -->
+    <section id="step-2" class="card" aria-labelledby="h-step2">
+      <h2 id="h-step2">Step 2 — MFA Challenge (TOTP)</h2>
+      <p class="hint">Enter the 6‑digit time-based code. Codes rotate every 30s.</p>
+      <div class="mfa-grid">
+        <div>
+          <div class="mfa-box">
+            <code id="mfa-code" class="code" aria-live="polite">000000</code>
+            <span id="mfa-ttl" class="ttl" aria-live="polite">30s</span>
+          </div>
+          <p class="mini">Secret (Base32): <code id="mfa-secret"></code></p>
+        </div>
+        <div class="qr">
+          <canvas id="qr" width="140" height="140" aria-label="Authenticator QR (mock)"></canvas>
+          <p class="mini">Scan in any TOTP app (demo)</p>
+        </div>
+      </div>
+
+      <form id="form-mfa" novalidate>
+        <label for="mfa-input">Enter code</label>
+        <input type="text" id="mfa-input" inputmode="numeric" pattern="\d{6}" maxlength="6" placeholder="000000" required />
+        <div class="actions">
+          <button type="submit" class="btn primary">Verify</button>
+          <button type="button" id="btn-back-1" class="btn link">Back</button>
+        </div>
+      </form>
+      <p class="footnote">Implements <abbr title="Time-based One-Time Password">TOTP</abbr> per RFC 6238 using Web Crypto (SHA‑1).</p>
+    </section>
+
+    <!-- Step 3: JWT -->
+    <section id="step-3" class="card" aria-labelledby="h-step3">
+      <h2 id="h-step3">Step 3 — JWT Issued (HS256)</h2>
+      <p class="hint">Here’s a signed JWT (HS256) created using Web Crypto. Header & claims below.</p>
+
+      <div class="token-wrap">
+        <pre id="jwt" class="token" aria-label="JSON Web Token"></pre>
+        <div class="vcol">
+          <button id="btn-copy" class="btn ghost">Copy Token</button>
+          <button id="btn-verify" class="btn ghost">Verify Signature</button>
+          <div id="verify-result" class="verify" role="status" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <details>
+        <summary>See decoded header & payload</summary>
+        <pre id="decoded" class="decoded"></pre>
+      </details>
+
+      <div class="actions">
+        <button id="btn-continue" class="btn primary">Continue</button>
+        <button type="button" id="btn-back-2" class="btn link">Back</button>
+      </div>
+      <p class="footnote">Real IdPs sign with private keys (RS256/ES256). HS256 is used here for a minimal self‑contained demo.</p>
+    </section>
+
+    <!-- Step 4: Redirect -->
+    <section id="step-4" class="card success" aria-labelledby="h-step4">
+      <h2 id="h-step4">Step 4 — Redirect Success</h2>
+      <p class="hint">Welcome! You’ve successfully simulated an SSO login.</p>
+      <div class="redirect-box">
+        <div class="check" aria-hidden="true">✔</div>
+        <p>Redirecting to <code>https://app.example.com/</code> (mock)…</p>
+      </div>
+      <div class="actions">
+        <button id="btn-restart" class="btn">Restart Demo</button>
+      </div>
+    </section>
+
+    <footer class="footer" role="contentinfo">
+      <p>© 2025 Andrew Symister • IAM & PAM Portfolio • Educational demo • No real authentication performed.</p>
+      <nav class="links" aria-label="Footer links">
+        <a href="https://asymister.notion.site/Access-Control-Secure-The-IAM-Portfolio-291c2c11a0eb80feabc0db8eeba0c4fc" target="_blank" rel="noopener">Portfolio</a>
+        <a href="https://github.com/andrew-symister" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://linkedin.com/in/andrewsymister" target="_blank" rel="noopener">LinkedIn</a>
+      </nav>
+    </footer>
+  </main>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
